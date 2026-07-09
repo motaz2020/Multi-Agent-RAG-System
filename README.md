@@ -93,10 +93,6 @@ When a query contains mixed intent (e.g., "Do you have vegan pasta? Book a table
 - Truncated to 2000 max tokens before LLM prompt
 - Prompt instructs the LLM to answer ONLY from provided context (grounded generation)
 
-### Why RAG instead of fine-tuning?
-- Restaurant menus and policies change frequently — RAG allows updating documents without retraining
-- No labeled data required
-- Transparent sourcing — every answer cites its source
 
 ---
 
@@ -146,99 +142,11 @@ Tools are simulated to demonstrate the tool-calling architecture without requiri
 
 ## Example Queries and Outputs
 
-### 1. Menu Knowledge (RAG)
+![1](assets/1.png)
 
-**Request:**
-```json
-POST /chat
-{"message": "What appetizers do you have?", "thread_id": "example-1"}
-```
+![2](assets/2.png)
 
-**Response:**
-```json
-{
-  "response": "Based on the provided restaurant menu context, here are the appetizers offered:\n\n### Bruschetta\nPrice: $8.99\nIngredients: Toasted bread, tomatoes, basil, garlic, olive oil\nDietary: Vegan-friendly, Vegetarian\nAllergens: Gluten\n\n### Calamari Fritti\nPrice: $10.99\n...",
-  "sources": ["restaurant_policies", "restaurant_menu"],
-  "tool_calls": [],
-  "confidence": 0.59,
-  "execution_time": 65.29
-}
-```
-
----
-
-### 2. Table Reservation (Tool)
-
-**Request:**
-```json
-POST /chat
-{"message": "Book a table for 4 at Downtown branch tomorrow at 7pm", "thread_id": "example-2"}
-```
-
-**Response:**
-```json
-{
-  "response": "Reservation Confirmed! Your Reservation ID is RES-8F743C87. We look forward to serving you at our downtown branch on 2026-07-10 at 19:00.",
-  "sources": ["tool:book_table"],
-  "tool_calls": ["book_table"],
-  "confidence": 1.0,
-  "execution_time": 2.69
-}
-```
-
----
-
-### 3. Policy Knowledge (RAG)
-
-**Request:**
-```json
-POST /chat
-{"message": "What are your operating hours?", "thread_id": "example-3"}
-```
-
-**Response:**
-```json
-{
-  "response": "Our restaurant operates as follows:\n\n### Uptown Branch:\n- Address: 456 Oak Avenue, Uptown\n...\n#### Downtown Branch Operating Hours:\n- Monday to Thursday: 11:00 AM - 10:00 PM\n- Friday to Saturday: 11:00 AM - 11:00 PM\n- Sunday: 12:00 PM - 9:00 PM\n\nNote: Closed on Christmas Day and New Year's Day.",
-  "sources": ["restaurant_policies", "restaurant_menu"],
-  "tool_calls": [],
-  "confidence": 0.55,
-  "execution_time": 10.24
-}
-```
-
----
-
-### 4. Today's Specials (Tool)
-
-**Request:**
-```json
-POST /chat
-{"message": "What is the today special at Riverside?", "thread_id": "example-4"}
-```
-
-**Response:**
-```json
-{
-  "response": "Today's special at Riverside is BBQ Ribs Platter priced at $18.99. It includes slow-cooked pork ribs glazed with house-made BBQ sauce, served with coleslaw and cornbread.",
-  "sources": ["tool:get_today_special"],
-  "tool_calls": ["get_today_special"],
-  "confidence": 1.0,
-  "execution_time": 2.7
-}
-```
-
----
-
-### 5. Mixed Intent (Parallel Execution)
-
-**Request:**
-```json
-POST /chat
-{"message": "Do you have vegan options and check table availability at Riverside tomorrow?", "thread_id": "example-5"}
-```
-
-This triggers parallel execution — RAG Agent retrieves menu info while Operations Agent checks availability concurrently.
+![3](assets/3.png)
 
 ---
 
@@ -247,11 +155,8 @@ This triggers parallel execution — RAG Agent retrieves menu info while Operati
 1. **Single restaurant chain** — All branches share the same menu with branch-specific specials
 2. **Ollama local inference** — LLM runs locally via Ollama (no cloud API costs, privacy, offline-capable)
 3. **Simulated tools** — Reservation/availability tools demonstrate the architecture without real booking integrations
-4. **English language queries** — System optimized for English; prompts and documents are in English
-5. **In-memory reservations** — Bookings reset on server restart (no persistent database for reservations)
-6. **50-100s LLM latency** — Small local models are slower; cloud LLMs (GPT-4o, etc.) would be ~2-5s
-7. **Desktop/server deployment** — ChromaDB and embeddings assume a capable CPU (no edge device constraints)
-8. **Thread-based memory** — Conversation isolation via thread_id; no user authentication layer
+4. **In-memory reservations** — Bookings reset on server restart (no persistent database for reservations)
+5. **Desktop/server deployment** — ChromaDB and embeddings assume a capable CPU (no edge device constraints)
 
 ---
 
