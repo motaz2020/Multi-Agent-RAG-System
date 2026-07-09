@@ -1,49 +1,368 @@
 # Smart Restaurant Assistant
 
-Multi-Agent RAG System for restaurant chain operations — menu queries, reservations, availability, and specials.
+Multi-Agent RAG System for restaurant chain operations — menu queries, reservations, availability checks, and today's specials.
 
 ## Architecture
 
-LangGraph orchestrator with 8 nodes: Memory Loader → Planner → Router → RAG/Operations → Merge → Validator → Formatter → Memory Saver.
+```
+┌─────────────┐
+│  User Query │
+└──────┬──────┘
+       ▼
+┌─────────────┐     ┌──────────────────┐
+│Memory Loader│────▶│ConversationHist.  │
+└─────────────┘     └──────────────────┘
+       ▼
+┌─────────────┐
+│   Planner   │  Intent detection via keywords + LLM fallback
+└──────┬──────┘
+       ▼
+┌─────────────┐
+│   Router    │  Routes to RAG and/or Operations
+└──────┬──────┘
+       │
+    ┌──┴──┐
+    ▼     ▼
+┌──────┐ ┌──────────┐
+│ RAG  │ │Operations│
+│Agent │ │  Agent   │
+└──┬───┘ └────┬─────┘
+   └────┬─────┘
+        ▼
+┌─────────────┐
+│    Merge    │  Combine RAG + tool results
+└──────┬──────┘
+       ▼
+┌─────────────┐
+│  Validator  │  Confidence check, content validation
+└──────┬──────┘
+       ▼
+┌─────────────┐
+│  Formatter  │  Format response (LLM or fallback)
+└──────┬──────┘
+       ▼
+┌─────────────┐
+│Memory Saver │  Persist conversation
+└──────┬──────┘
+       ▼
+┌─────────────┐
+│  Response   │
+└─────────────┘
+```
+
+### Node Responsibilities
+
+| Node | Responsibility |
+|------|---------------|
+| Memory Loader | Load previous conversation history for the given thread_id |
+| Planner | Detect user intent via keyword matching, fallback to LLM for complex queries |
+| Router | Send to RAG, Operations, or both in parallel using LangGraph Send |
+| RAG Agent | Retrieve relevant chunks from ChromaDB, build context, generate grounded answer |
+| Operations Agent | Execute tool calls (book_table, check_availability, get_today_special) |
+| Merge | Combine RAG and operation results into a single response |
+| Validator | Validate confidence threshold, check for empty/ungrounded responses |
+| Formatter | Polish final response with LLM or format raw content as fallback |
+| Memory Saver | Save conversation back to checkpointer |
+
+### Parallel Execution
+
+When a query contains mixed intent (e.g., "Do you have vegan pasta? Book a table"), the Router uses LangGraph's `Send()` to run RAG and Operations nodes in parallel, then merges results.
+
+---
+
+## RAG Design Decisions
+
+### Chunking Strategy
+- **Chunk size**: 500 characters
+- **Overlap**: 100 characters
+- **Splitter**: RecursiveCharacterTextSplitter (respects paragraph/sentence boundaries)
+
+### Embedding Model
+- **Model**: `BAAI/bge-small-en-v1.5` (384-dimensional embeddings)
+- **Reason**: Lightweight (33MB), fast inference on CPU, good semantic quality for domain-specific retrieval
+
+### Vector Store
+- **Database**: ChromaDB (persisted to `data/chroma/`)
+- **Collection**: `restaurant_documents`
+- **Retrieval**: Top-4 semantic search with cosine similarity
+- **Metadata filtering**: Source document name attached to each chunk
+
+### Context Building
+- Retrieved chunks are deduplicated by content hash
+- Ranked by relevance score
+- Truncated to 2000 max tokens before LLM prompt
+- Prompt instructs the LLM to answer ONLY from provided context (grounded generation)
+
+### Why RAG instead of fine-tuning?
+- Restaurant menus and policies change frequently — RAG allows updating documents without retraining
+- No labeled data required
+- Transparent sourcing — every answer cites its source
+
+---
+
+## Tool Simulation
+
+The system includes 3 simulated tools backed by an in-memory store:
+
+### `check_table_availability(branch, date_str, time_str)`
+- Checks if tables are free at a given branch/date/time
+- Simulated with a 50% availability rate
+- Returns available/not available with remaining slot count
+
+### `book_table(customer_name, branch, date_str, time_str)`
+- Books a table reservation
+- Generates a unique reservation ID (format: `RES-XXXXXXXX`)
+- Stores in memory (resets on server restart)
+- Validates branch name, rejects empty names
+
+### `get_today_special(branch)`
+- Returns the chef's daily special for each branch
+- Pre-defined specials per branch (rotating)
+- Includes name, price, description
+
+### Why simulated tools?
+Tools are simulated to demonstrate the tool-calling architecture without requiring external API integrations. They follow the same interface (`name`, `description`, `parameters`, `execute`) as real LangChain tools.
+
+---
+
+## Memory Design
+
+### Checkpointer
+- **Type**: LangGraph `MemorySaver` (in-memory)
+- **Production upgrade**: Swap to `SqliteSaver` for persistence across restarts
+
+### Conversation History
+- Each thread_id maintains its own conversation history
+- Memory Loader retrieves history at the start of each turn
+- Memory Saver appends the current turn after processing
+- History is injected into RAG prompts for context-aware answers
+
+### Thread Management
+- Stateless API — thread_id determines conversation context
+- `/reset?thread_id=...` clears a conversation
+- Useful for testing: use different thread_ids for parallel conversations
+
+---
+
+## Example Queries and Outputs
+
+### 1. Menu Knowledge (RAG)
+
+**Request:**
+```json
+POST /chat
+{"message": "What appetizers do you have?", "thread_id": "example-1"}
+```
+
+**Response:**
+```json
+{
+  "response": "Based on the provided restaurant menu context, here are the appetizers offered:\n\n### Bruschetta\nPrice: $8.99\nIngredients: Toasted bread, tomatoes, basil, garlic, olive oil\nDietary: Vegan-friendly, Vegetarian\nAllergens: Gluten\n\n### Calamari Fritti\nPrice: $10.99\n...",
+  "sources": ["restaurant_policies", "restaurant_menu"],
+  "tool_calls": [],
+  "confidence": 0.59,
+  "execution_time": 65.29
+}
+```
+
+---
+
+### 2. Table Reservation (Tool)
+
+**Request:**
+```json
+POST /chat
+{"message": "Book a table for 4 at Downtown branch tomorrow at 7pm", "thread_id": "example-2"}
+```
+
+**Response:**
+```json
+{
+  "response": "Reservation Confirmed! Your Reservation ID is RES-8F743C87. We look forward to serving you at our downtown branch on 2026-07-10 at 19:00.",
+  "sources": ["tool:book_table"],
+  "tool_calls": ["book_table"],
+  "confidence": 1.0,
+  "execution_time": 2.69
+}
+```
+
+---
+
+### 3. Policy Knowledge (RAG)
+
+**Request:**
+```json
+POST /chat
+{"message": "What are your operating hours?", "thread_id": "example-3"}
+```
+
+**Response:**
+```json
+{
+  "response": "Our restaurant operates as follows:\n\n### Uptown Branch:\n- Address: 456 Oak Avenue, Uptown\n...\n#### Downtown Branch Operating Hours:\n- Monday to Thursday: 11:00 AM - 10:00 PM\n- Friday to Saturday: 11:00 AM - 11:00 PM\n- Sunday: 12:00 PM - 9:00 PM\n\nNote: Closed on Christmas Day and New Year's Day.",
+  "sources": ["restaurant_policies", "restaurant_menu"],
+  "tool_calls": [],
+  "confidence": 0.55,
+  "execution_time": 10.24
+}
+```
+
+---
+
+### 4. Today's Specials (Tool)
+
+**Request:**
+```json
+POST /chat
+{"message": "What is the today special at Riverside?", "thread_id": "example-4"}
+```
+
+**Response:**
+```json
+{
+  "response": "Today's special at Riverside is BBQ Ribs Platter priced at $18.99. It includes slow-cooked pork ribs glazed with house-made BBQ sauce, served with coleslaw and cornbread.",
+  "sources": ["tool:get_today_special"],
+  "tool_calls": ["get_today_special"],
+  "confidence": 1.0,
+  "execution_time": 2.7
+}
+```
+
+---
+
+### 5. Mixed Intent (Parallel Execution)
+
+**Request:**
+```json
+POST /chat
+{"message": "Do you have vegan options and check table availability at Riverside tomorrow?", "thread_id": "example-5"}
+```
+
+This triggers parallel execution — RAG Agent retrieves menu info while Operations Agent checks availability concurrently.
+
+---
+
+## Assumptions Made
+
+1. **Single restaurant chain** — All branches share the same menu with branch-specific specials
+2. **Ollama local inference** — LLM runs locally via Ollama (no cloud API costs, privacy, offline-capable)
+3. **Simulated tools** — Reservation/availability tools demonstrate the architecture without real booking integrations
+4. **English language queries** — System optimized for English; prompts and documents are in English
+5. **In-memory reservations** — Bookings reset on server restart (no persistent database for reservations)
+6. **50-100s LLM latency** — Small local models are slower; cloud LLMs (GPT-4o, etc.) would be ~2-5s
+7. **Desktop/server deployment** — ChromaDB and embeddings assume a capable CPU (no edge device constraints)
+8. **Thread-based memory** — Conversation isolation via thread_id; no user authentication layer
+
+---
+
+## Tech Stack
+
+| Layer | Technology |
+|-------|-----------|
+| Language | Python 3.12+ |
+| API | FastAPI |
+| AI Framework | LangGraph |
+| LLM | Ollama (qwen2.5:3b, configurable) |
+| Embeddings | BAAI/bge-small-en-v1.5 |
+| Vector Database | ChromaDB |
+| Memory | LangGraph MemorySaver (SQLite upgradable) |
+| Tool Layer | LangChain-style Tool Registry |
+| Configuration | Pydantic Settings |
 
 ## Quick Start
 
 ```bash
-# 1. Start Ollama
+# Prerequisites: Python 3.12+, Ollama installed
+
+# 1. Pull LLM model
 ollama pull qwen2.5:3b-instruct-q3_K_S
 
-# 2. Install dependencies
-python -m venv venv && source venv/bin/activate
+# 2. Setup environment
+python -m venv venv
+source venv/bin/activate
 pip install -r requirements.txt
 
-# 3. Index knowledge base
+# 3. Configure
+cp .env.example .env
+# Edit .env if needed (defaults work for local Ollama)
+
+# 4. Index restaurant documents into ChromaDB
 python -c "from ai.rag.indexer import index_documents; index_documents()"
 
-# 4. Start server
+# 5. Start API server
 python -m uvicorn app.main:app --reload
 
-# 5. Chat (another terminal)
+# 6. Open another terminal and chat
 python chat.py
 ```
 
-## API
+## API Endpoints
 
 | Endpoint | Method | Description |
 |----------|--------|-------------|
-| `/health` | GET | Health check |
-| `/chat` | POST | Send message |
-| `/reset` | POST | Clear conversation |
+| `/health` | GET | Health check — returns `{"status": "healthy"}` |
+| `/chat` | POST | Send a message — body: `{"message": "...", "thread_id": "..."}` |
+| `/reset` | POST | Clear conversation — query param: `?thread_id=...` |
 
-## Tech Stack
+### Interactive Testing
 
-Python 3.12, FastAPI, LangGraph, ChromaDB, BAAI/bge-small-en-v1.5, Ollama, SQLite
+Open `http://127.0.0.1:8000/docs` in your browser for Swagger UI — try all endpoints directly.
+
+## Project Structure
+
+```
+├── app/
+│   ├── api/routes.py      # FastAPI endpoints
+│   ├── dependencies/       # Singleton graph instance
+│   └── main.py             # FastAPI app entrypoint
+├── ai/
+│   ├── graph/              # LangGraph orchestration
+│   │   ├── builder.py      # StateGraph compilation
+│   │   ├── state.py        # Graph state schema
+│   │   ├── router.py       # Route planning logic
+│   │   └── nodes/          # 7 node implementations
+│   ├── rag/                # RAG pipeline
+│   │   ├── pipeline.py     # Retrieve → Context → LLM
+│   │   ├── retriever.py    # Top-K semantic search
+│   │   ├── context.py      # Context building
+│   │   └── ...             # Loader, chunker, embeddings, indexer
+│   ├── tools/              # Tool registry + implementations
+│   ├── prompts/            # Prompt templates (Markdown)
+│   ├── models/schemas.py   # Pydantic schemas
+│   └── config/settings.py  # Centralized configuration
+├── data/                   # Knowledge base + ChromaDB index
+├── tests/                  # 53 pytest tests
+├── chat.py                 # CLI chat interface
+├── .env.example            # Environment template
+├── PROJECT_MAP.md          # Full technical blueprint
+└── requirements.txt
+```
 
 ## Testing
 
 ```bash
-pytest tests/ -v
+pytest tests/ -v      # 53 tests (planner, router, tools, RAG, validator, merge, models)
 ```
 
 ## Configuration
 
-Copy `.env.example` to `.env` and adjust. See `PROJECT_MAP.md` for full blueprint.
+All configuration is in `.env` (see `.env.example`):
+
+| Variable | Default | Description |
+|----------|---------|-------------|
+| `OLLAMA_MODEL_NAME` | `qwen2.5:3b-instruct-q3_K_S` | LLM model |
+| `OLLAMA_BASE_URL` | `http://localhost:11434` | Ollama server URL |
+| `EMBEDDING_MODEL` | `BAAI/bge-small-en-v1.5` | Embedding model |
+| `TOP_K` | `4` | Retrieved chunks per query |
+| `CHUNK_SIZE` | `500` | Document chunk size |
+| `CHUNK_OVERLAP` | `100` | Chunk overlap |
+| `CONFIDENCE_THRESHOLD` | `0.7` | Minimum validation confidence |
+
+## Switching LLM Providers
+
+The system uses Ollama by default. To use OpenAI or Groq:
+
+1. Install the provider package (`langchain-openai` or `langchain-groq` already in requirements.txt)
+2. Update `ai/rag/pipeline.py` and `ai/graph/nodes/planner.py` + `formatter.py` to use the new chat class
+3. Set API key in `.env`
+
