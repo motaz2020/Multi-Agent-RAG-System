@@ -239,7 +239,6 @@ Open `http://127.0.0.1:8000/docs` in your browser for Swagger UI — try all end
 ├── tests/                  # 53 pytest tests
 ├── chat.py                 # CLI chat interface
 ├── .env.example            # Environment template
-├── PROJECT_MAP.md          # Full technical blueprint
 └── requirements.txt
 ```
 
