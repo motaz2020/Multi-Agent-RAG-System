@@ -1,0 +1,62 @@
+# Restaurant Policies
+
+## Opening Hours
+- Monday to Thursday: 11:00 AM - 10:00 PM
+- Friday to Saturday: 11:00 AM - 11:00 PM
+- Sunday: 12:00 PM - 9:00 PM
+- The restaurant is closed on Christmas Day and New Year's Day.
+
+## Reservations
+- Reservations can be made online or by phone.
+- Reservations are recommended for parties of 4 or more.
+- A credit card is required to secure reservations for parties of 6 or more.
+- Reservations can be modified up to 2 hours before the booking time.
+- Cancellations must be made at least 4 hours in advance.
+- Late arrivals of more than 15 minutes may result in table release.
+- Maximum party size per reservation is 12 guests.
+- For parties larger than 12, please contact our events team.
+
+## Available Branches
+### Downtown Branch
+- Address: 123 Main Street, Downtown
+- Phone: (555) 123-4567
+- Parking: Street parking and public garage available
+- Seating Capacity: 80 guests
+
+### Uptown Branch
+- Address: 456 Oak Avenue, Uptown
+- Phone: (555) 234-5678
+- Parking: Private parking lot available
+- Seating Capacity: 60 guests
+
+### Riverside Branch
+- Address: 789 River Road, Riverside
+- Phone: (555) 345-6789
+- Parking: Valet parking available
+- Seating Capacity: 120 guests
+
+## Refund Policy
+- Refunds are processed within 5-7 business days.
+- Full refund available for cancellations made more than 24 hours before the reservation.
+- 50% refund for cancellations made between 4-24 hours before the reservation.
+- No refund for cancellations made less than 4 hours before the reservation.
+- Food quality complaints will be addressed by the manager on duty.
+- Overcharged orders will be refunded the difference immediately.
+
+## Birthday Events
+- Birthday events can be arranged for parties of any size.
+- Free dessert for the birthday person.
+- Birthday decoration packages start at $25.
+- Private room available for parties of 10 or more at no extra charge.
+- Custom cake allowed with 48-hour advance notice.
+- Special birthday menu available for groups of 8 or more.
+
+## Catering Rules
+- Catering services available for events of 20 or more guests.
+- Orders must be placed at least 72 hours in advance.
+- Delivery available within 10 miles of any branch.
+- Delivery fee: $25 within 5 miles, $50 for 5-10 miles.
+- Setup and cleanup included for orders over $500.
+- Custom menu consultation available for events over $1000.
+- Dietary restrictions can be accommodated with 48-hour notice.
+- Payment required in full at time of order for catering.

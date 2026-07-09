@@ -1,0 +1,28 @@
+# Core
+fastapi
+uvicorn[standard]
+pydantic
+pydantic-settings
+python-dotenv
+
+# AI Framework
+langgraph
+langchain-core
+langchain-community
+langchain-openai
+langchain-text-splitters
+langchain-groq
+
+# Vector Store
+chromadb
+
+# Embeddings
+sentence-transformers
+
+# Document Loading
+pypdf
+
+# Testing
+pytest
+pytest-asyncio
+httpx

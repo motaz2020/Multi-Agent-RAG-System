@@ -1,0 +1,131 @@
+# Restaurant Menu
+
+## Appetizers
+
+### Bruschetta
+- Price: $8.99
+- Ingredients: Toasted bread, tomatoes, basil, garlic, olive oil
+- Cooking Method: Fresh, no cooking required
+- Dietary: Vegan-friendly, Vegetarian
+- Allergens: Gluten
+
+### Calamari Fritti
+- Price: $10.99
+- Ingredients: Squid, flour, lemon, marinara sauce
+- Cooking Method: Deep-fried
+- Dietary: Contains seafood
+- Allergens: Gluten, Shellfish
+
+### Stuffed Mushrooms
+- Price: $9.99
+- Ingredients: Mushrooms, cream cheese, garlic, herbs, breadcrumbs
+- Cooking Method: Baked
+- Dietary: Vegetarian
+- Allergens: Gluten, Dairy
+
+### Greek Salad
+- Price: $7.99
+- Ingredients: Lettuce, tomatoes, cucumbers, olives, feta cheese, olive oil
+- Cooking Method: Fresh, no cooking required
+- Dietary: Vegetarian
+- Allergens: Dairy
+
+## Main Courses
+
+### Grilled Chicken
+- Price: $15.99
+- Ingredients: Chicken breast, herbs, lemon, garlic, olive oil
+- Cooking Method: Grilled
+- Dietary: Gluten-free, High-protein
+- Allergens: None
+
+### Vegan Pasta
+- Price: $13.99
+- Ingredients: Penne pasta, tomato sauce, vegetables, basil, olive oil
+- Cooking Method: Boiled
+- Dietary: Vegan-friendly, Vegetarian
+- Allergens: Gluten
+
+### Grilled Salmon
+- Price: $18.99
+- Ingredients: Salmon fillet, lemon, dill, butter, asparagus
+- Cooking Method: Grilled
+- Dietary: Gluten-free, High-protein
+- Allergens: Fish
+
+### Beef Steak
+- Price: $21.99
+- Ingredients: Ribeye steak, rosemary, garlic, butter, black pepper
+- Cooking Method: Pan-seared
+- Dietary: Gluten-free, High-protein
+- Allergens: Dairy
+
+### Mushroom Risotto
+- Price: $14.99
+- Ingredients: Arborio rice, mushrooms, parmesan, white wine, vegetable broth
+- Cooking Method: Simmered
+- Dietary: Vegetarian, Gluten-free
+- Allergens: Dairy
+
+### Chicken Alfredo
+- Price: $15.99
+- Ingredients: Fettuccine pasta, chicken breast, cream, parmesan, garlic
+- Cooking Method: Boiled, Pan-seared
+- Dietary: Contains dairy
+- Allergens: Gluten, Dairy
+
+## Desserts
+
+### Tiramisu
+- Price: $7.99
+- Ingredients: Mascarpone, coffee, ladyfingers, cocoa powder
+- Cooking Method: No-bake, chilled
+- Dietary: Vegetarian
+- Allergens: Gluten, Dairy
+
+### Chocolate Lava Cake
+- Price: $8.99
+- Ingredients: Dark chocolate, butter, eggs, sugar, flour
+- Cooking Method: Baked
+- Dietary: Vegetarian
+- Allergens: Gluten, Dairy, Eggs
+
+### Panna Cotta
+- Price: $6.99
+- Ingredients: Cream, vanilla, sugar, gelatin, berry sauce
+- Cooking Method: No-bake, chilled
+- Dietary: Vegetarian, Gluten-free
+- Allergens: Dairy
+
+## Beverages
+
+### Fresh Lemonade
+- Price: $3.99
+- Ingredients: Fresh lemons, sugar, water, mint
+- Cooking Method: Fresh
+- Dietary: Vegan-friendly, Gluten-free
+- Allergens: None
+
+### Espresso
+- Price: $2.99
+- Ingredients: Coffee beans, water
+- Cooking Method: Brewed
+- Dietary: Vegan-friendly, Gluten-free
+- Allergens: None
+
+### Herbal Tea
+- Price: $2.99
+- Ingredients: Assorted herbal tea bags, hot water
+- Cooking Method: Steeped
+- Dietary: Vegan-friendly, Gluten-free
+- Allergens: None
+
+## Today's Specials
+
+### Special Plate
+- Price: $12.99
+- Ingredients: Chef's selection of seasonal ingredients
+- Description: Ask your server for today's special selection
+- Cooking Method: Varies
+- Dietary: Ask server for dietary options
+- Allergens: Ask server for allergen information
