@@ -11,6 +11,7 @@ build/
 .env
 venv/
 .venv/
+PROJECT_MAP.md
 
 # IDE
 .vscode/
