@@ -1,4 +1,4 @@
-# Smart Restaurant Assistant
+# Multi-Agent-RAG-System (Smart Restaurant Assistant)
 
 Multi-Agent RAG System for restaurant chain operations — menu queries, reservations, availability checks, and today's specials.
 
